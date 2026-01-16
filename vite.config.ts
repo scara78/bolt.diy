@@ -19,6 +19,29 @@ export default defineConfig((config) => {
     build: {
       target: 'esnext',
     },
+
+    // --- dev server config: allow EasyPanel host + HMR config for proxied HTTPS ---
+    server: {
+      // listen on 0.0.0.0 so the container is reachable from the host/proxy
+      host: true,
+      // allow setting port via env (useful in containers) or default to 3000
+      port: Number(process.env.PORT) || 3000,
+
+      // allow the specific host shown in the error and any easypanel.host subdomain
+      allowedHosts: [
+        'app.scara.ovh',
+        /\.easypanel\.host$/,
+      ],
+
+      // If EasyPanel front is terminating TLS / using a proxy, HMR may need wss + host
+      // You can override VITE_HMR_HOST / VITE_USE_HTTPS from environment if needed
+      hmr: process.env.VITE_USE_HTTPS === 'true' ? {
+        protocol: 'wss',
+        host: process.env.VITE_HMR_HOST || 'manager-bolt2.ziwadf.easypanel.host',
+        port: Number(process.env.VITE_HMR_PORT) || 443,
+      } : undefined,
+    },
+
     plugins: [
       nodePolyfills({
         include: ['buffer', 'process', 'util', 'stream'],
